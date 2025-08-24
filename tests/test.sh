@@ -3,7 +3,7 @@
 set -e
 
 run_playbook() {
-    ansible-playbook -i hosts stow.yml --extra-vars "state=$1 fail_if_changed=$2" -v
+    ansible-playbook -i hosts stow.yml --extra-vars "state=$1 fail_if_changed=$2 folding=$3" -v
 }
 
 # create the library directory and copy the module
@@ -51,3 +51,12 @@ run_playbook "supress"
 
 # test the file content (again)
 grep -Fxq bar "$HOME/.config/foo/bar" || exit 1
+
+# test `--no-folding`
+figlet "folding"
+run_playbook "absent" # clean the directory
+run_playbook "present" "no" "false"
+# test if the directories were actually created and not symlinked
+test -d "$HOME/.config" || exit 1
+test -d "$HOME/.config/foo" || exit 1
+test -L "$HOME/.config/foo/bar" || exit 1
